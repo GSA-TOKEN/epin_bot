@@ -1,0 +1,6 @@
+from .templates import (
+    WELCOME_MESSAGE,
+    HELP_MESSAGE,
+    PRODUCT_MESSAGES,
+    ORDER_SUCCESS_MESSAGE
+)

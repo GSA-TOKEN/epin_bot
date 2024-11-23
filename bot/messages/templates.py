@@ -1,5 +1,3 @@
-# messages.py
-
 WELCOME_MESSAGE = (
     "Welcome to E-Pin Shop! 🎮\n\n"
     "Your destination for Netflix, Riot, Milli Piyango, PS, Razer Gold, and PUBG codes."

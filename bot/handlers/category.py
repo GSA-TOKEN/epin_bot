@@ -1,5 +1,3 @@
-# handlers/category_handlers.py
-
 from telegram import Update
 from telegram.ext import ContextTypes
 from keyboards import epins_category_keyboard, games_category_keyboard, special_offers_keyboard

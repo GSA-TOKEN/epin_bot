@@ -1,22 +1,31 @@
-# main.py
-
+from telegram import Update
 from telegram.ext import (
-    Application, CommandHandler, CallbackQueryHandler, ConversationHandler, MessageHandler, filters
+    Application, CommandHandler, CallbackQueryHandler, ConversationHandler
 )
-from config import BOT_TOKEN
+from config.settings import BOT_TOKEN, LOG_LEVEL
+from config.states import (
+    MAIN_MENU, CATEGORY_SELECTION, PRODUCT_SELECTION, 
+    QUANTITY_INPUT, PAYMENT_SELECTION, ORDER_CONFIRMATION
+)
 from handlers import (
-    start, help_menu, main_menu, show_categories, show_products, show_orders,
-    handle_quantity, handle_payment, handle_order_confirmation, view_code, copy_code,
-    help_command, cancel, return_to_menu
+    start, help_menu, main_menu, show_categories, show_products, 
+    show_orders, handle_quantity, handle_payment, handle_order_confirmation, 
+    view_code, copy_code, help_command, cancel, return_to_menu
 )
-from config import (
-    MAIN_MENU, CATEGORY_SELECTION, PRODUCT_SELECTION, QUANTITY_INPUT, PAYMENT_SELECTION, ORDER_CONFIRMATION
-)
+import logging
 
 def main():
     """Start the bot."""
+    # Configure logging
+    logging.basicConfig(
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        level=getattr(logging, LOG_LEVEL)
+    )
+
+    # Build application
     application = Application.builder().token(BOT_TOKEN).build()
 
+    # Add conversation handler
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
@@ -61,7 +70,7 @@ def main():
     application.add_handler(conv_handler)
 
     # Start the Bot
-    application.run_polling()
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == '__main__':
     main()

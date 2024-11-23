@@ -1,5 +1,3 @@
-# handlers/payment_handlers.py
-
 from telegram import Update
 from telegram.ext import ContextTypes
 from keyboards import payment_methods_keyboard, orders_keyboard
