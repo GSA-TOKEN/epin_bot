@@ -24,3 +24,14 @@ async def help_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         reply_markup=main_menu_keyboard()
     )
     return MAIN_MENU
+
+async def return_to_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Return to main menu handler"""
+    query = update.callback_query
+    await query.answer()
+    
+    await query.edit_message_text(
+        text=WELCOME_MESSAGE,
+        reply_markup=main_menu_keyboard()
+    )
+    return MAIN_MENU

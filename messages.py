@@ -5,7 +5,28 @@ WELCOME_MESSAGE = (
     "Your destination for Netflix, Riot, Milli Piyango, PS, Razer Gold, and PUBG codes."
 )
 
-HELP_MESSAGE = "Need help with your purchase? Contact our support team!"
+HELP_MESSAGE = """
+🤖 Available Commands:
+/start - Start or restart the bot
+/help - Show this help message
+/cancel - Cancel current operation
+
+💡 Navigation Tips:
+• Use the menu buttons to browse products
+• '⬅️ Back' buttons return to previous menu
+• 'My Orders' shows your purchase history
+
+🛒 Shopping Guide:
+1. Browse Products
+2. Select Category
+3. Choose Product
+4. Select Quantity
+5. Choose Payment Method
+6. Confirm Order
+
+❓ Need Support?
+Contact: @support_admin
+"""
 
 PRODUCT_MESSAGES = {
     'netflix': "Select a Netflix Gift Card:",
