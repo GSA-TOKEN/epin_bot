@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "E-Pin Shop API"
-    API_V1_STR: str = "/api/v1"
+    API_V1_STR: str = "/api"
     
     # PostgreSQL
     POSTGRES_SERVER: str

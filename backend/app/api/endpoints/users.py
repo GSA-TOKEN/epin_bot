@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from app.db.base import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, User as UserSchema
-from app.core.security import get_password_hash
 
 router = APIRouter()
 
@@ -13,11 +12,10 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    hashed_password = get_password_hash(user.password)
     db_user = User(
         email=user.email,
         username=user.username,
-        hashed_password=hashed_password
+        telegram_user_id=user.telegram_user_id
     )
     db.add(db_user)
     db.commit()
@@ -26,4 +24,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserSchema)
 def read_user_me(db: Session = Depends(get_db)):
-    return {"message": "Current user info"}
+    user = db.query(User).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user

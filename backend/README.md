@@ -65,4 +65,4 @@ Manage your database schema changes with Alembic:
 Access the API documentation and base URL:
 
 - **Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
-- **API Base URL:** [http://localhost:8000/api/v1](http://localhost:8000/api/v1)
+- **API Base URL:** [http://localhost:8000/api](http://localhost:8000/api)

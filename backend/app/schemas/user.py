@@ -3,9 +3,10 @@ from pydantic import BaseModel, EmailStr
 class UserBase(BaseModel):
     email: EmailStr
     username: str
+    telegram_user_id: str
 
 class UserCreate(UserBase):
-    password: str
+    pass
 
 class User(UserBase):
     id: int
