@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     SUPABASE_URL: str
     SUPABASE_KEY: str
 
+    ADMIN_TELEGRAM_ID: str
+
     class Config:
         env_file = ".env"
 

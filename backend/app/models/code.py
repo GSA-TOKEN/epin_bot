@@ -10,7 +10,7 @@ class Code(Base):
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     code = Column(String, nullable=False)
     purchase_date = Column(DateTime, default=datetime.datetime.utcnow)
-    purchase_cost = Column(Numeric(10, 2), nullable=False)
+    purchase_cost = Column(Numeric(10, 2), nullable=True)
     sale_price = Column(Numeric(10, 2), nullable=True)
     gross_profit = Column(Numeric(10, 2), nullable=True)
     is_sold = Column(Boolean, default=False)

@@ -30,7 +30,7 @@ Follow these steps to set up and run the E-Pin Shop:
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/yourusername/epin-shop.git
+   git clone https://github.com/bartusisman/epin_bot
    cd epin-shop
    ```
 

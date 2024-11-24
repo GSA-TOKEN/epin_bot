@@ -1,8 +1,8 @@
 from telegram import Update
 from telegram.ext import (
-    Application, CommandHandler, CallbackQueryHandler, ConversationHandler
+    Application, CommandHandler, CallbackQueryHandler, ConversationHandler, MessageHandler, filters
 )
-from config.settings import BOT_TOKEN, LOG_LEVEL
+from config.settings import BOT_TOKEN, LOG_LEVEL, ADMIN_TELEGRAM_ID, SUPPORT_ADMIN
 from config.states import (
     MAIN_MENU, CATEGORY_SELECTION, PRODUCT_SELECTION, 
     QUANTITY_INPUT, PAYMENT_SELECTION, ORDER_CONFIRMATION
@@ -12,6 +12,7 @@ from handlers import (
     show_orders, handle_quantity, handle_payment, handle_order_confirmation, 
     view_code, copy_code, help_command, cancel, return_to_menu
 )
+from handlers.admin import admin_upload, handle_csv_upload
 import logging
 
 def main():
@@ -68,6 +69,15 @@ def main():
     )
 
     application.add_handler(conv_handler)
+
+    # Add admin handlers
+    application.add_handler(CommandHandler("admin_upload", admin_upload))
+    application.add_handler(
+        MessageHandler(
+            filters.Document.FileExtension("csv") & filters.User(user_id=int(ADMIN_TELEGRAM_ID)), 
+            handle_csv_upload
+        )
+    )
 
     # Start the Bot
     application.run_polling(allowed_updates=Update.ALL_TYPES)
