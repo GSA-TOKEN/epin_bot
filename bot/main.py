@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import (
-    Application, CommandHandler, CallbackQueryHandler, ConversationHandler, MessageHandler, filters
+    Application, CommandHandler, CallbackQueryHandler, ConversationHandler, MessageHandler, filters, PreCheckoutQueryHandler
 )
 from config.settings import BOT_TOKEN, LOG_LEVEL, ADMIN_TELEGRAM_ID, SUPPORT_ADMIN
 from config.states import (
@@ -13,6 +13,7 @@ from handlers import (
     view_code, copy_code, help_command, cancel, return_to_menu
 )
 from handlers.admin import admin_upload, handle_csv_upload
+from handlers.unlimit import precheckout_callback, successful_payment_callback
 import logging
 
 def main():
@@ -78,6 +79,10 @@ def main():
             handle_csv_upload
         )
     )
+
+    # Add payment handlers
+    application.add_handler(PreCheckoutQueryHandler(precheckout_callback))
+    application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_callback))
 
     # Start the Bot
     application.run_polling(allowed_updates=Update.ALL_TYPES)

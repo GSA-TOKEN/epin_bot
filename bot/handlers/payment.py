@@ -3,6 +3,7 @@ from telegram.ext import ContextTypes
 from keyboards import payment_methods_keyboard, orders_keyboard
 from messages import ORDER_SUCCESS_MESSAGE
 from config import ORDER_CONFIRMATION, PAYMENT_SELECTION, MAIN_MENU
+from .unlimit import handle_unlimit_payment
 
 async def handle_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handle payment selection"""
@@ -33,7 +34,9 @@ async def handle_order_confirmation(update: Update, context: ContextTypes.DEFAUL
     query = update.callback_query
     await query.answer()
 
-    if query.data.startswith('pay_'):
+    if query.data == 'pay_unlimit':
+        return await handle_unlimit_payment(update, context)
+    elif query.data.startswith('pay_'):
         payment_method = query.data.split('_')[1]
         product = context.user_data.get('selected_product', {})
         quantity = context.user_data.get('quantity', 1)
