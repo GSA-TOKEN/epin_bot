@@ -14,6 +14,7 @@ from handlers import (
 )
 from handlers.admin import admin_upload, handle_csv_upload
 from handlers.unlimit import precheckout_callback, successful_payment_callback
+from handlers.ton import handle_ton_payment, check_ton_payment
 import logging
 
 def main():
@@ -53,6 +54,8 @@ def main():
                 CallbackQueryHandler(show_products, pattern="^product_")
             ],
             PAYMENT_SELECTION: [
+                CallbackQueryHandler(handle_ton_payment, pattern='^pay_ton$'),
+                CallbackQueryHandler(handle_ton_payment, pattern='^cancel_payment$'),
                 CallbackQueryHandler(handle_payment, pattern="^qty_"),
                 CallbackQueryHandler(handle_quantity, pattern="^buy_"),
                 CallbackQueryHandler(handle_payment, pattern="^confirm_purchase$")
@@ -83,6 +86,12 @@ def main():
     # Add payment handlers
     application.add_handler(PreCheckoutQueryHandler(precheckout_callback))
     application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_callback))
+
+    # Add TON payment handlers
+    application.add_handler(CallbackQueryHandler(
+        check_ton_payment, 
+        pattern='^check_ton_'
+    ))
 
     # Start the Bot
     application.run_polling(allowed_updates=Update.ALL_TYPES)

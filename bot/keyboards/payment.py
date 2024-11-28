@@ -4,6 +4,7 @@ from typing import List
 def payment_methods_keyboard(product_type: str, amount: str) -> InlineKeyboardMarkup:
     keyboard: List[List[InlineKeyboardButton]] = [
         [InlineKeyboardButton("💳 Pay with Card", callback_data='pay_unlimit')],
+        [InlineKeyboardButton("💎 Pay with TON", callback_data='pay_ton')],
         [InlineKeyboardButton("₿ Cryptocurrency", callback_data='pay_crypto')],
         [InlineKeyboardButton("💰 Balance", callback_data='pay_balance')],
         [InlineKeyboardButton("⬅️ Back", callback_data=f'buy_{product_type}_{amount}')]
