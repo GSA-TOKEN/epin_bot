@@ -15,4 +15,3 @@ class Product(Base):
     updated_at = Column(DateTime, onupdate=datetime.datetime.utcnow)
 
     codes = relationship("Code", back_populates="product")
-    order_items = relationship("OrderItem", back_populates="product") 

@@ -4,7 +4,6 @@ from decimal import Decimal
 class OrderCreate(BaseModel):
     user_id: int
     product_type: str
-    product_amount: str
     quantity: int
     payment_method: str
     payment_id: str

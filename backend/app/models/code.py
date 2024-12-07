@@ -15,9 +15,9 @@ class Code(Base):
     gross_profit = Column(Numeric(10, 2), nullable=True)
     is_sold = Column(Boolean, default=False)
     sold_at = Column(DateTime, nullable=True)
-    order_item_id = Column(Integer, ForeignKey("order_items.id"), nullable=True)
+    order_id = Column(Integer, ForeignKey("orders.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.datetime.utcnow)
 
     product = relationship("Product", back_populates="codes")
-    order_item = relationship("OrderItem", back_populates="codes") 
+    order = relationship("Order", back_populates="codes")

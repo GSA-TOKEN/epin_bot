@@ -18,3 +18,4 @@ class User(Base):
     updated_at = Column(DateTime, onupdate=datetime.datetime.utcnow)
 
     orders = relationship("Order", back_populates="user")
+    

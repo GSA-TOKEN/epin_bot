@@ -5,7 +5,7 @@ from config.settings import TON_WALLET_ADDRESS
 from config import MAIN_MENU
 import logging
 import random
-from utils.db import create_order, update_order_status, get_order, get_product_codes
+from utils.db import create_order, update_order_status, get_order, get_product_codes, get_order_codes
 import asyncio
 from .command import cancel  # Import the existing cancel handler
 from decimal import Decimal
@@ -148,7 +148,6 @@ async def check_ton_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         order_id = await create_order(
             user_id=update.effective_user.id,
             product_type=product.get('type'),
-            product_amount=product.get('amount'),
             quantity=quantity,
             payment_method='ton',
             payment_id=payment_id,
@@ -205,52 +204,41 @@ async def verify_ton_transaction(
     order_id: int,
     expected_amount: Decimal
 ) -> None:
-    """Verify TON transaction in background"""
+    """Verify TON transaction and deliver codes if successful"""
     ton_service = TONService()
-    max_attempts = 18  # 3 minutes (18 * 10 seconds)
     attempt = 0
-
+    max_attempts = 12  # 2 minutes (12 * 10 seconds)
+    
     while attempt < max_attempts:
         try:
-            # Check transaction
-            verification = await ton_service.verify_payment(payment_id, expected_amount)
-            logger.info(f"Verification result: {verification}")
+            # Check for payment using verify_payment instead of check_payment
+            payment_result = await ton_service.verify_payment(
+                payment_id=payment_id,
+                expected_amount=expected_amount
+            )
             
-            if verification.get("verified", False):
-                # Update order status first
+            if payment_result["verified"]:
+                # Update order status
                 await update_order_status(order_id, "completed")
                 
-                # Get order details
-                order = await get_order(order_id)
-                logger.info(f"Retrieved order: {order}")
+                # Get codes for the order
+                codes = await get_order_codes(order_id)
                 
-                if not order or not isinstance(order, dict):
-                    logger.error(f"Order {order_id} not found or invalid format")
-                    raise Exception("Invalid order data")
+                if not codes:
+                    logger.error(f"No codes found for order {order_id}")
+                    raise Exception("No codes found for order")
                 
-                # Get product codes
-                product_type = str(order.get("product_type", ""))
-                product_amount = str(order.get("product_amount", ""))
-                quantity = int(order.get("quantity", 1))
+                # Format codes message
+                codes_message = "✅ Payment confirmed!\n\n Here are your codes:\n\n"
+                for code in codes:
+                    codes_message += f"`{code['code']}`\n"
                 
-                logger.info(f"Getting codes for: type={product_type}, amount={product_amount}, quantity={quantity}")
-                codes = await get_product_codes(product_type, product_amount, quantity)
+                codes_message += "\n📝 Save these codes safely!"
                 
-                if not codes or not isinstance(codes, list):
-                    logger.error(f"Invalid codes returned: {codes}")
-                    raise Exception("No valid codes available")
-                
-                # Format success message
-                codes_text = "\n".join([f"- {code}" for code in codes])
-                success_message = (
-                    f"✅ Payment confirmed!\n\n"
-                    f"Transaction Hash: {verification.get('transaction_hash', 'N/A')}\n"
-                    f"Amount: {verification.get('amount', 0.0)} TON\n\n"
-                    f"Your codes:\n{codes_text}"
-                )
-                
+                # Send codes to user
                 await update.callback_query.edit_message_text(
-                    text=success_message,
+                    text=codes_message,
+                    parse_mode='Markdown',
                     reply_markup=InlineKeyboardMarkup([[
                         InlineKeyboardButton("⬅️ Back to Menu", callback_data='menu')
                     ]])

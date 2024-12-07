@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 async def create_order(
     user_id: int,
     product_type: str,
-    product_amount: str,
     quantity: int,
     payment_method: str,
     payment_id: str,
@@ -24,7 +23,6 @@ async def create_order(
             data = {
                 "user_id": user_id,
                 "product_type": product_type,
-                "product_amount": product_amount,
                 "quantity": quantity,
                 "payment_method": payment_method,
                 "payment_id": payment_id,
@@ -46,27 +44,28 @@ async def create_order(
         return None
 
 async def update_order_status(order_id: int, status: str) -> bool:
+    """Update order status"""
     async with ClientSession() as session:
         async with session.patch(f"{API_BASE_URL}/orders/{order_id}", json={
             "status": status
         }) as response:
             return response.status == 200
 
-async def get_order(order_id: int) -> dict:
+async def get_order(order_id: int) -> Optional[dict]:
+    """Get order by ID"""
     async with ClientSession() as session:
         async with session.get(f"{API_BASE_URL}/orders/{order_id}") as response:
             if response.status == 200:
                 return await response.json()
             return None
 
-async def get_product_codes(product_type: str, product_amount: str, quantity: int) -> list:
+async def get_product_codes(product_type: str, quantity: int) -> list:
     """Get available product codes from the database"""
     async with ClientSession() as session:
         async with session.get(
             f"{API_BASE_URL}/codes/available",
             params={
                 "product_type": product_type,
-                "product_amount": product_amount,
                 "quantity": quantity
             }
         ) as response:
@@ -74,7 +73,7 @@ async def get_product_codes(product_type: str, product_amount: str, quantity: in
                 data = await response.json()
                 return data.get('codes', [])
             logging.error(f"Failed to get product codes: {response.status}")
-            return [] 
+            return []
 
 async def register_user(user_id: int, username: str = None, first_name: str = None, last_name: str = None) -> bool:
     """Register user in the database"""
@@ -97,3 +96,13 @@ async def register_user(user_id: int, username: str = None, first_name: str = No
     except Exception as e:
         logger.error(f"Error registering user: {e}")
         return False 
+
+async def get_order_codes(order_id: int) -> list:
+    """Get codes associated with an order"""
+    async with ClientSession() as session:
+        async with session.get(f"{API_BASE_URL}/orders/{order_id}/codes") as response:
+            if response.status == 200:
+                data = await response.json()
+                return data.get('codes', [])
+            logger.error(f"Failed to get order codes. Status: {response.status}")
+            return [] 

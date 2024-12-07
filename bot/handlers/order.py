@@ -31,10 +31,12 @@ async def show_orders(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
                     # Format orders message
                     orders_text = "Your Orders:\n\n"
                     for order in orders:
+                        payment_amount = f"{order['amount_ton']:.2f} TON" if order['payment_method'] == 'ton' else f"${order['amount_usd']:.2f}"
                         orders_text += (
-                            f"#{order['id']} - {order['product_name']}\n"
-                            f"Amount: {order['amount']} {order['payment_method'].upper()}\n"
-                            f"Status: {order['status'].title()}\n"
+                            f"#{order['id']} - {order['product_type']}\n"
+                            f"Amount: {payment_amount}\n"
+                            f"Quantity: {order['quantity']}\n"
+                            f"Status: {order['payment_status'].title()}\n"
                             f"Date: {order['created_at']}\n\n"
                         )
                     
