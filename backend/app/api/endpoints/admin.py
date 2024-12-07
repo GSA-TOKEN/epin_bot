@@ -26,26 +26,36 @@ async def upload_pins(
 
     content = await file.read()
     csv_text = content.decode()
-    csv_reader = csv.DictReader(StringIO(csv_text))
     
+    # First pass: validate headers
+    csv_file = StringIO(csv_text)
+    csv_reader = csv.DictReader(csv_file)
     required_columns = {'product_name', 'price', 'pin_code'}
-    if not all(col in next(csv_reader).keys() for col in required_columns):
+    if not all(col in csv_reader.fieldnames for col in required_columns):
         raise HTTPException(
             status_code=400, 
             detail="CSV must contain columns: product_name, price, pin_code"
         )
 
+    # Second pass: process rows
+    csv_file = StringIO(csv_text)  # Reset the StringIO
+    csv_reader = csv.DictReader(csv_file)  # Create new reader
     products_created = 0
     pins_created = 0
 
     for row in csv_reader:
+        print(f"Processing row: {row}")  # Debug log
+        
         # Get or create product
         product = db.query(Product).filter(Product.name == row['product_name']).first()
+        print(f"Found product: {product}")  # Debug log
+        
         if not product:
+            print(f"Creating new product: {row['product_name']}")  # Debug log
             product = Product(
                 name=row['product_name'],
                 price=Decimal(row['price']),
-                category='default'  # You might want to add category to CSV
+                category='default'
             )
             db.add(product)
             db.flush()
