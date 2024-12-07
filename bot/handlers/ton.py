@@ -152,8 +152,8 @@ async def check_ton_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             quantity=quantity,
             payment_method='ton',
             payment_id=payment_id,
-            amount_ton=final_price,
-            amount_usd=price_in_usd * quantity,
+            amount_ton=float(final_price),
+            amount_usd=float(price_in_usd * quantity),
             status='pending'
         )
         
@@ -198,111 +198,80 @@ async def check_ton_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
 
 
-async def verify_ton_transaction(update: Update, context: ContextTypes.DEFAULT_TYPE, 
-                               payment_id: str, order_id: int, expected_amount: Decimal) -> None:
-    """Background task to verify TON transaction"""
+async def verify_ton_transaction(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    payment_id: str,
+    order_id: int,
+    expected_amount: Decimal
+) -> None:
+    """Verify TON transaction in background"""
     ton_service = TONService()
-    max_attempts = 18  # Extended to 3 minutes (18 * 10 seconds)
-    
-    try:
-        logger.info(f"Starting payment verification for order {order_id}")
-        logger.info(f"Payment ID: {payment_id}")
-        logger.info(f"Expected amount: {expected_amount} TON")
-        
-        for attempt in range(max_attempts):
-            logger.info(f"Verification attempt {attempt + 1}/{max_attempts}")
-            
-            order = await get_order(order_id)
-            if not order:
-                logger.error(f"Order {order_id} not found in database")
-                break
-            
-            logger.info(f"Order status: {order.get('status')}")
-                
-            # Check payment expiry
-            payment_expiry = context.user_data.get('payment_expiry')
-            if payment_expiry:
-                logger.info(f"Payment expiry time: {payment_expiry}")
-                if datetime.now() > payment_expiry:
-                    logger.info(f"Payment expired for order {order_id}")
-                    await update_order_status(order_id, 'expired')
-                    await context.bot.send_message(
-                        chat_id=update.effective_chat.id,
-                        text="❌ Payment time expired.\nPlease start a new order."
-                    )
-                    return
+    max_attempts = 18  # 3 minutes (18 * 10 seconds)
+    attempt = 0
 
-            # Verify payment with transaction hash
-            logger.info(f"Checking TON transaction for payment {payment_id}")
-            payment_data = await ton_service.verify_payment(payment_id, expected_amount)
-            logger.info(f"Payment verification response: {payment_data}")
+    while attempt < max_attempts:
+        try:
+            # Check transaction
+            verification = await ton_service.verify_payment(payment_id, expected_amount)
+            logger.info(f"Verification result: {verification}")
             
-            if payment_data and payment_data.get('verified'):
-                tx_hash = payment_data.get('transaction_hash')
-                logger.info(f"Payment verified! Transaction hash: {tx_hash}")
+            if verification.get("verified", False):
+                # Update order status first
+                await update_order_status(order_id, "completed")
                 
-                # Update order with transaction hash
-                await update_order_status(
-                    order_id, 
-                    'paid',
-                    {'transaction_hash': tx_hash}
-                )
-
+                # Get order details
+                order = await get_order(order_id)
+                logger.info(f"Retrieved order: {order}")
+                
+                if not order or not isinstance(order, dict):
+                    logger.error(f"Order {order_id} not found or invalid format")
+                    raise Exception("Invalid order data")
+                
                 # Get product codes
-                codes = await get_product_codes(
-                    product_type=order['product_type'],
-                    product_amount=order['product_amount'],
-                    quantity=order['quantity']
+                product_type = str(order.get("product_type", ""))
+                product_amount = str(order.get("product_amount", ""))
+                quantity = int(order.get("quantity", 1))
+                
+                logger.info(f"Getting codes for: type={product_type}, amount={product_amount}, quantity={quantity}")
+                codes = await get_product_codes(product_type, product_amount, quantity)
+                
+                if not codes or not isinstance(codes, list):
+                    logger.error(f"Invalid codes returned: {codes}")
+                    raise Exception("No valid codes available")
+                
+                # Format success message
+                codes_text = "\n".join([f"- {code}" for code in codes])
+                success_message = (
+                    f"✅ Payment confirmed!\n\n"
+                    f"Transaction Hash: {verification.get('transaction_hash', 'N/A')}\n"
+                    f"Amount: {verification.get('amount', 0.0)} TON\n\n"
+                    f"Your codes:\n{codes_text}"
                 )
                 
-                if not codes:
-                    logger.warning(f"No codes available for order {order_id}")
-                    await update_order_status(order_id, 'paid')
-                    await context.bot.send_message(
-                        chat_id=update.effective_chat.id,
-                        text=f"✅ Payment confirmed!\n\n"
-                             f"Order ID: #{order_id}\n"
-                             f"Your codes will be delivered shortly."
-                    )
-                    return
-                
-                logger.info(f"Found {len(codes)} codes for order {order_id}")
-                
-                # Update order and send codes
-                await update_order_status(order_id, 'completed')
-                codes_text = "\n".join([f"- `{code}`" for code in codes])
-                await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
-                    text=f"✅ Payment confirmed!\n\n"
-                         f"Order ID: #{order_id}\n"
-                         f"Product: {order['product_type'].title()} {order['product_amount']}\n"
-                         f"Quantity: {order['quantity']}\n\n"
-                         f"Your codes:\n{codes_text}",
-                    parse_mode='Markdown'
+                await update.callback_query.edit_message_text(
+                    text=success_message,
+                    reply_markup=InlineKeyboardMarkup([[
+                        InlineKeyboardButton("⬅️ Back to Menu", callback_data='menu')
+                    ]])
                 )
                 return
-
-            if attempt == max_attempts - 1:
-                logger.warning(f"Payment verification timeout for order {order_id}")
             
+            # Payment not found yet
+            attempt += 1
             await asyncio.sleep(10)
-
-        # Payment verification timeout
-        logger.error(f"Payment verification failed after {max_attempts} attempts")
-        await update_order_status(order_id, 'failed')
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text="❌ Payment verification failed.\n\n"
-                 "If you've sent the payment, please contact support with your Order ID:\n"
-                 f"#{order_id}"
-        )
-        
-    except Exception as e:
-        logger.error(f"Error in TON transaction verification: {str(e)}", exc_info=True)
-        await update_order_status(order_id, 'error')
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text="❌ An error occurred during payment verification.\n"
-                 "Please contact support with your Order ID:\n"
-                 f"#{order_id}"
-        )
+            
+        except Exception as e:
+            logger.error(f"Error in verify_ton_transaction: {e}", exc_info=True)
+            attempt += 1
+            await asyncio.sleep(10)
+    
+    # Verification failed after max attempts
+    await update_order_status(order_id, "failed")
+    await update.callback_query.edit_message_text(
+        f"❌ Payment verification failed.\n\n"
+        f"If you've sent the payment, please contact support with your Order ID: #{order_id}",
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("⬅️ Back to Menu", callback_data='menu')
+        ]])
+    )
