@@ -33,7 +33,7 @@ The E-Pin Shop is composed of two primary components:
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/bartusisman/epin_bot
+   git clone https://github.com/GSA-TOKEN/epin_bot
    cd epin-shop
    ```
 
