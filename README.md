@@ -2,6 +2,10 @@
 
 Welcome to the E-Pin Shop, a digital marketplace for gift cards and game currencies, powered by a FastAPI backend and a Telegram bot interface.
 
+## Telegram Bot Link
+
+[EpinAutomatorBot](https://t.me/EpinAutomatorBot)
+
 ## Project Overview
 
 The E-Pin Shop is composed of two primary components:
@@ -108,4 +112,3 @@ The E-Pin Shop is composed of two primary components:
 - Keep your TON wallet private key secure
 - Regularly rotate API keys and tokens
 
-## Project Structure
