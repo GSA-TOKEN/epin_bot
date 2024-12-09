@@ -10,11 +10,11 @@ from config.states import (
 from handlers import (
     start, help_menu, main_menu, show_categories, show_products, 
     show_orders, handle_quantity, handle_payment, handle_order_confirmation, 
-    view_code, copy_code, help_command, cancel, return_to_menu
+    view_code, help_command, cancel, return_to_menu
 )
 from handlers.admin import admin_upload, handle_csv_upload
 from handlers.unlimit import precheckout_callback, successful_payment_callback
-from handlers.ton import handle_ton_payment, check_ton_payment
+from handlers.ton import handle_ton_payment, check_ton_payment, copy_code
 import logging
 
 def main():
@@ -37,8 +37,7 @@ def main():
                 CallbackQueryHandler(show_orders, pattern="^orders$"),
                 CallbackQueryHandler(help_menu, pattern="^help$"),
                 CallbackQueryHandler(return_to_menu, pattern="^start$"),
-                CallbackQueryHandler(view_code, pattern="^view_code"),
-                CallbackQueryHandler(copy_code, pattern="^copy_code")
+                CallbackQueryHandler(view_code, pattern="^view_code")
             ],
             CATEGORY_SELECTION: [
                 CallbackQueryHandler(show_categories, pattern="^category_"),
@@ -92,6 +91,12 @@ def main():
     application.add_handler(CallbackQueryHandler(
         check_ton_payment, 
         pattern='^check_ton_'
+    ))
+
+    # Add copy code handler
+    application.add_handler(CallbackQueryHandler(
+        copy_code, 
+        pattern='^copy_code_\d+_\d+$'
     ))
 
     # Start the Bot

@@ -222,26 +222,40 @@ async def verify_ton_transaction(
                 await update_order_status(order_id, "completed")
                 
                 # Get codes for the order
-                codes = await get_order_codes(order_id)
+                codes_response = await get_order_codes(order_id)
                 
-                if not codes:
+                if not codes_response:
                     logger.error(f"No codes found for order {order_id}")
                     raise Exception("No codes found for order")
                 
-                # Format codes message
-                codes_message = "✅ Payment confirmed!\n\n Here are your codes:\n\n"
-                for code in codes:
-                    codes_message += f"`{code['code']}`\n"
+                # Store codes in user_data for copy functionality
+                context.user_data['order_codes'] = [code['code'] for code in codes_response]
+                
+                # Format codes message with copy buttons
+                codes_message = "✅ Payment confirmed!\n\nHere are your codes:\n\n"
+                keyboard = []
+                
+                for idx, code in enumerate(codes_response, 1):
+                    codes_message += f"{idx}. `{code['code']}`\n"
+                    keyboard.append([
+                        InlineKeyboardButton(
+                            f"📋 Copy Code #{idx}", 
+                            callback_data=f'copy_code_{order_id}_{idx-1}'
+                        )
+                    ])
                 
                 codes_message += "\n📝 Save these codes safely!"
+                
+                # Add back to menu button
+                keyboard.append([
+                    InlineKeyboardButton("⬅️ Back to Menu", callback_data='menu')
+                ])
                 
                 # Send codes to user
                 await update.callback_query.edit_message_text(
                     text=codes_message,
                     parse_mode='Markdown',
-                    reply_markup=InlineKeyboardMarkup([[
-                        InlineKeyboardButton("⬅️ Back to Menu", callback_data='menu')
-                    ]])
+                    reply_markup=InlineKeyboardMarkup(keyboard)
                 )
                 return
             
@@ -263,3 +277,42 @@ async def verify_ton_transaction(
             InlineKeyboardButton("⬅️ Back to Menu", callback_data='menu')
         ]])
     )
+
+# Add new handler for copying individual codes
+async def copy_code(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle copying individual codes"""
+    query = update.callback_query
+    
+    try:
+        # Parse callback data (format: copy_code_24_0)
+        callback_parts = query.data.split('_')
+        if len(callback_parts) != 4:
+            raise ValueError("Invalid callback data format")
+            
+        order_id = callback_parts[2]
+        code_index = int(callback_parts[3])
+        
+        # Get code from user_data
+        codes = context.user_data.get('order_codes', [])
+        if not codes or code_index >= len(codes):
+            logger.error(f"Code not found: order_id={order_id}, index={code_index}")
+            await query.answer("❌ Error: Code not found")
+            return
+            
+        code = codes[code_index]
+        
+        # Send code in an easily copyable format
+        await query.message.reply_text(
+            "📋 Double tap the code below to copy:\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n"
+            f"`{code}`\n"
+            "━━━━━━━━━━━━━━━━━━━━━",
+            parse_mode='Markdown'
+        )
+        
+        # Notify user
+        await query.answer("✨ Code ready to copy!")
+        
+    except Exception as e:
+        logger.error(f"Error in copy_code: {e}")
+        await query.answer("❌ Error retrieving code")
