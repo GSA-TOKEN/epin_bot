@@ -12,21 +12,20 @@ The E-Pin Shop is composed of two primary components:
 ## Technology Stack
 
 - **Backend Technologies:**
-  - **FastAPI**: Web framework for building APIs.
-  - **SQLAlchemy**: Object-Relational Mapping (ORM) tool.
-  - **Alembic**: Database migration tool.
-  - **Supabase**: Database service.
-  - **Pydantic**: Data validation and settings management.
+  - **FastAPI**: Web framework for building APIs
+  - **SQLAlchemy**: Object-Relational Mapping (ORM) tool
+  - **Alembic**: Database migration tool
+  - **Supabase**: Database service
+  - **Pydantic**: Data validation and settings management
 
 - **Bot Technologies:**
-  - **python-telegram-bot**: Library for building Telegram bots.
-  - **Python asyncio**: Asynchronous programming support.
-  - **State Management**: Manages bot states and transitions.
-  - **Message Templates**: Predefined message formats for user interaction.
+  - **python-telegram-bot**: Library for building Telegram bots
+  - **Python asyncio**: Asynchronous programming support
+  - **TON Payments**: Cryptocurrency payment integration
+  - **State Management**: Manages bot states and transitions
+  - **Message Templates**: Predefined message formats for user interaction
 
 ## Quick Start Guide
-
-Follow these steps to set up and run the E-Pin Shop:
 
 1. **Clone the Repository:**
    ```bash
@@ -47,52 +46,66 @@ Follow these steps to set up and run the E-Pin Shop:
 
 4. **Configure Environment Variables:**
 
-   Create `.env` files in both `/bot` and `/backend` directories with the following content:
+   Create `.env` files in both `/bot` and `/backend` directories:
 
-   **Backend `.env`:**
+   **Backend `.env**:**
    ```plaintext
-   # PostgreSQL Configuration
-   POSTGRES_SERVER=your-server
-   POSTGRES_USER=your-user
-   POSTGRES_PASSWORD=your-password
-   POSTGRES_PORT=your-port
-   POSTGRES_DB=your-db
-   DATABASE_URL=your-url
+   # PostgreSQL (Supabase)
+   POSTGRES_USER=
+   POSTGRES_PASSWORD
+   POSTGRES_SERVER=
+   POSTGRES_PORT=6543
+   POSTGRES_DB=postgres
+   DATABASE_URL=postgresql:
 
-   # Security Settings
+   # Security
    SECRET_KEY=your-secret-key
    ACCESS_TOKEN_EXPIRE_MINUTES=30
 
-   # Supabase Configuration
-   SUPABASE_URL=your-url
-   SUPABASE_KEY=your-key
+   # Admin Configuration
+   ADMIN_TELEGRAM_ID=your_admin_telegram_id
    ```
 
-   **Bot `.env`:**
+   **Bot `.env**:**
    ```plaintext
-   BOT_TOKEN=your-telegram-bot-token
-   LOG_LEVEL=DEBUG  # Use INFO for production
+   BOT_TOKEN=
+   LOG_LEVEL=DEBUG
+   ADMIN_TELEGRAM_ID=
+   API_BASE_URL=http://localhost:8000/api
+   SUPPORT_ADMIN=@support_admin
+   
+   # Payment Configuration
+   UNLIMIT_PROVIDER_TOKEN=
+   TON_WALLET_ADDRES
+   TON_TESTNET=true
+   TON_API_KEY
    ```
 
 5. **Launch the Applications:**
 
-   - **Backend**: Open a terminal and run:
-     ```bash
-     cd backend
-     uvicorn main:app --reload
-     ```
+   Start Backend:
+   ```bash
+   cd backend
+   uvicorn main:app --reload
+   ```
 
-   - **Bot**: Open another terminal and run:
-     ```bash
-     cd bot
-     python main.py
-     ```
+   Start Bot:
+   ```bash
+   cd bot
+   python main.py
+   ```
 
 ## Documentation
 
-- Access the Backend API documentation at: [http://localhost:8000/docs](http://localhost:8000/docs)
-- For detailed setup instructions, refer to:
+- Backend API documentation: [http://localhost:8000/docs](http://localhost:8000/docs)
+- Detailed setup instructions:
   - [Backend README](backend/README.md)
   - [Bot README](bot/README.md)
+
+## Security Notes
+
+- Never commit `.env` files to version control
+- Keep your TON wallet private key secure
+- Regularly rotate API keys and tokens
 
 ## Project Structure

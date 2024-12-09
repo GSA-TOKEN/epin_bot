@@ -1,68 +1,73 @@
 # E-Pin Shop API
 
-Welcome to the FastAPI backend for the E-Pin Shop application. This guide will help you set up and run the application efficiently.
+FastAPI backend with cryptocurrency payment support.
 
 ## Quick Start Guide
 
-### 1. Environment Setup
+### Environment Setup
 
-- **Create a Virtual Environment:**
-  ```bash
-  python -m venv venv
-  source venv/bin/activate  # For Windows: venv\Scripts\activate
-  ```
+1. **Create a Virtual Environment:**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
 
-- **Install Dependencies:**
-  ```bash
-  pip install -r requirements.txt
-  ```
+### Configuration
 
-### 2. Configuration
+Create a `.env` file:
 
-- **Edit the `.env` file:**
-  Ensure you provide your database credentials and other necessary configurations.
+```plaintext
+# PostgreSQL (Supabase)
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+POSTGRES_SERVER=
+POSTGRES_PORT=6543
+POSTGRES_DB=postgres
+DATABASE_URL=
 
-### 3. Database Initialization
+# Security
+SECRET_KEY=your-secret-key
+ACCESS_TOKEN_EXPIRE_MINUTES=30
 
-- **Run Database Migrations:**
-  ```bash
-  alembic upgrade head
-  ```
+# Admin Configuration
+ADMIN_TELEGRAM_ID=your_admin_telegram_id
+```
 
-### 4. Start Development Server
+### Database Management
 
-- **Launch the Server:**
-  ```bash
-  uvicorn main:app --reload
-  ```
+1. **Run Migrations:**
+   ```bash
+   alembic upgrade head
+   ```
 
-## Database Migrations
+2. **Create New Migration:**
+   ```bash
+   alembic revision --autogenerate -m "description"
+   ```
 
-Manage your database schema changes with Alembic:
+### Start Development Server
 
-- **Create a New Migration:**
-  ```bash
-  alembic revision --autogenerate -m "description"
-  ```
+```bash
+uvicorn main:app --reload
+```
 
-- **Upgrade to Latest Version:**
-  ```bash
-  alembic upgrade head
-  ```
+## Key Features
 
-- **Downgrade One Version:**
-  ```bash
-  alembic downgrade -1
-  ```
-
-- **Check Current Version:**
-  ```bash
-  alembic current
-  ```
+- Cryptocurrency payment processing
+- Concurrent order processing
+- Automatic code assignment
+- User management
+- Product management
 
 ## API Documentation
 
-Access the API documentation and base URL:
+- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
+- ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
-- **Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
-- **API Base URL:** [http://localhost:8000/api](http://localhost:8000/api)
+## Security Measures
+
+- API key authentication
+- Session management
+- SQL injection protection
+- XSS prevention
