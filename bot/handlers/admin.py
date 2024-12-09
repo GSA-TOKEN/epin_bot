@@ -6,8 +6,13 @@ import io
 import aiohttp
 from config.settings import API_BASE_URL
 
+def is_admin(user_id: int) -> bool:
+    """Check if user is an admin"""
+    admin_ids = [int(id.strip()) for id in ADMIN_TELEGRAM_ID.split(',')]
+    return user_id in admin_ids
+
 async def admin_upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if str(update.effective_user.id) != ADMIN_TELEGRAM_ID:
+    if not is_admin(update.effective_user.id):
         await update.message.reply_text("⛔️ This command is only available for administrators.")
         return
 
@@ -22,7 +27,7 @@ async def admin_upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def handle_csv_upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if str(update.effective_user.id) != ADMIN_TELEGRAM_ID:
+    if not is_admin(update.effective_user.id):
         await update.message.reply_text("⛔️ Not authorized")
         return
 

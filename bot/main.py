@@ -78,7 +78,8 @@ def main():
     application.add_handler(CommandHandler("admin_upload", admin_upload))
     application.add_handler(
         MessageHandler(
-            filters.Document.FileExtension("csv") & filters.User(user_id=int(ADMIN_TELEGRAM_ID)), 
+            filters.Document.FileExtension("csv") & 
+            filters.User(user_id=[int(id.strip()) for id in ADMIN_TELEGRAM_ID.split(',')]), 
             handle_csv_upload
         )
     )
