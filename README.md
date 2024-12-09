@@ -62,7 +62,7 @@ The E-Pin Shop is composed of two primary components:
 
 2. **Set Up a Virtual Environment:**
    ```bash
-   python -m venv venv
+   python3.11 -m venv venv
    source venv/bin/activate  # For Windows: venv\Scripts\activate
    ```
 
