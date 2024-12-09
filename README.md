@@ -6,6 +6,29 @@ Welcome to the E-Pin Shop, a digital marketplace for gift cards and game currenc
 
 [EpinAutomatorBot](https://t.me/EpinAutomatorBot)
 
+### CSV Upload (`/admin_upload`)
+
+Upload product codes using a CSV file with the following format:
+
+```csv
+product_name,price,pin_code
+Steam $10,10.00,ABCD-1234-EFGH
+Steam $20,20.00,WXYZ-5678-IJKL
+```
+
+**Required Columns:**
+- `product_name`: Name of the product (e.g., "Steam $10")
+- `price`: Price in decimal format (e.g., 10.00)
+- `pin_code`: The actual code/pin to be sold
+
+**Usage:**
+1. Send `/admin_upload` command
+2. Upload a CSV file following the format above
+3. System will create products if they don't exist
+4. Codes will be added to the database
+
+Note: Only authorized admin Telegram IDs can use this command.
+
 ## Project Overview
 
 The E-Pin Shop is composed of two primary components:
