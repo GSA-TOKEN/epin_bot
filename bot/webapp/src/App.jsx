@@ -41,20 +41,26 @@ function App() {
       // Convert TON amount to nanotons (1 TON = 1e9 nanotons)
       const amountInNanotons = BigInt(Math.round(parseFloat(product.priceInTon) * 1e9)).toString();
 
-      // Create transaction with text comment instead of payload
+      // Create transaction matching Tonkeeper's format exactly
       const transaction = {
         validUntil: Math.floor(Date.now() / 1000) + 600, // 10 minutes
         messages: [
           {
             address: import.meta.env.VITE_TON_WALLET_ADDRESS,
             amount: amountInNanotons,
-            // Remove stateInit and use text comment instead
-            payload: `text=${product.paymentId}`
+            // Format comment exactly as in the working URL
+            payload: product.paymentId.toString()
           }
         ]
       };
 
-      console.log('Sending transaction:', transaction);
+      console.log('Sending transaction:', {
+        ...transaction,
+        messages: transaction.messages.map(msg => ({
+          ...msg,
+          amount: Number(msg.amount) / 1e9 + ' TON'  // Log in human-readable format
+        }))
+      });
 
       // Send transaction
       const result = await tonConnectUI.sendTransaction(transaction);
@@ -73,7 +79,7 @@ function App() {
       }
     } catch (e) {
       console.error('Transaction failed:', e);
-      WebApp.showAlert('Transaction failed. Please try again.');
+      WebApp.showAlert('Transaction failed: ' + e.message);
     } finally {
       setLoading(false);
     }
