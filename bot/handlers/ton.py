@@ -15,6 +15,7 @@ from utils.logger import setup_logger
 from exchange_service import get_ton_price
 from ton_service import TONService
 import json
+import urllib.parse
 
 logger = setup_logger()
 
@@ -55,13 +56,16 @@ async def handle_ton_payment(update: Update, context: ContextTypes.DEFAULT_TYPE)
             }
         }
         
+        # Properly encode the data for URL
+        encoded_data = urllib.parse.quote(json.dumps(webapp_data))
+        
         # Create keyboard with multiple payment options
         keyboard = [
             [
                 InlineKeyboardButton(
                     "💎 Pay with TON Connect",
                     web_app=WebAppInfo(
-                        url=f"{WEBAPP_URL}?initData={webapp_data}"
+                        url=f"{WEBAPP_URL}?initData={encoded_data}"
                     )
                 )
             ],
@@ -372,7 +376,7 @@ async def copy_code(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         # Send code in an easily copyable format
         await query.message.reply_text(
             "📋 Double tap the code below to copy:\n"
-            "━━━━━━━━━━━━━━━━━━━━━\n"
+            "━━━━��━━━━━━━━━━━━━━━━\n"
             f"`{code}`\n"
             "━━━━━━━━━━━━━━━━━━━━━",
             parse_mode='Markdown'

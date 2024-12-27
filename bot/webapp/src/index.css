@@ -56,4 +56,14 @@ header {
 .purchase-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.error-message {
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 20px 0;
+  color: #d32f2f;
+  text-align: center;
 } 

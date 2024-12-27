@@ -7,17 +7,26 @@ function App() {
   const [tonConnectUI] = useTonConnectUI();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Get product details from Telegram WebApp init data
-    const initData = WebApp.initData || '';
+    // Get product details from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const initData = urlParams.get('initData');
+    
     if (initData) {
       try {
-        const data = JSON.parse(decodeURIComponent(initData));
+        const decodedData = decodeURIComponent(initData);
+        const data = JSON.parse(decodedData);
+        console.log('Parsed product data:', data.product);
         setProduct(data.product);
+        setError(null);
       } catch (e) {
         console.error('Failed to parse init data:', e);
+        setError('Failed to load product details. Please try again.');
       }
+    } else {
+      setError('No product data found. Please start from the bot.');
     }
 
     WebApp.ready();
@@ -41,10 +50,13 @@ function App() {
         ]
       };
 
+      console.log('Sending transaction:', transaction);
+
       // Send transaction
       const result = await tonConnectUI.sendTransaction(transaction);
       
       if (result) {
+        console.log('Transaction result:', result);
         // Notify the bot about successful transaction
         WebApp.sendData(JSON.stringify({
           type: 'payment_success',
@@ -70,7 +82,9 @@ function App() {
       </header>
 
       <main>
-        {product ? (
+        {error ? (
+          <div className="error-message">{error}</div>
+        ) : product ? (
           <div className="product-details">
             <h2>{product.type}</h2>
             <p>Price: {product.priceInTon} TON</p>
