@@ -15,4 +15,4 @@ TON_TESTNET = getenv('TON_TESTNET').lower() == 'true'
 TON_API_KEY = getenv('TON_API_KEY')
 
 # WebApp Configuration
-WEBAPP_URL = os.getenv('WEBAPP_URL', 'https://your-domain.com/webapp')
+WEBAPP_URL = os.getenv('WEBAPP_URL', 'https://epin-bot.vercel.app/')

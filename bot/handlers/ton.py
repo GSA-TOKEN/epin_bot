@@ -55,26 +55,46 @@ async def handle_ton_payment(update: Update, context: ContextTypes.DEFAULT_TYPE)
             }
         }
         
-        # Create WebApp button
-        keyboard = [[
-            InlineKeyboardButton(
-                "💎 Pay with TON Wallet",
-                web_app=WebAppInfo(
-                    url=f"{WEBAPP_URL}?initData={webapp_data}"
+        # Create keyboard with multiple payment options
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "💎 Pay with TON Connect",
+                    web_app=WebAppInfo(
+                        url=f"{WEBAPP_URL}?initData={webapp_data}"
+                    )
                 )
-            )
-        ]]
+            ],
+            [
+                InlineKeyboardButton(
+                    "💳 Pay with Tonkeeper",
+                    url=f"https://app.tonkeeper.com/transfer/{TON_WALLET_ADDRESS}?amount={int(final_price * Decimal('1e9'))}&text={payment_id}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "💳 Pay with TonHub",
+                    url=f"https://tonhub.com/transfer/{TON_WALLET_ADDRESS}?amount={int(final_price * Decimal('1e9'))}&text={payment_id}"
+                )
+            ],
+            [InlineKeyboardButton("✅ I've Sent Payment", callback_data=f'check_ton_{payment_id}')],
+            [InlineKeyboardButton("❌ Cancel", callback_data='cancel_payment')]
+        ]
         
         await query.edit_message_text(
-            f"💫 Ready to process your order:\n\n"
+            f"💫 Choose your payment method:\n\n"
             f"Product: {product.get('type').title()} {product.get('amount')}\n"
             f"Quantity: {quantity}\n"
             f"Total: {final_price:.2f} TON\n\n"
-            f"Click below to open TON Connect and complete your purchase:",
+            f"Options:\n"
+            f"1️⃣ TON Connect - Connect wallet directly in Telegram\n"
+            f"2️⃣ Tonkeeper - Open in Tonkeeper app\n"
+            f"3️⃣ TonHub - Open in TonHub app\n\n"
+            f"After sending payment, click 'I've Sent Payment'",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
         
-        logger.info(f"TON payment initiated via WebApp: {payment_id} for {final_price} TON")
+        logger.info(f"TON payment options presented: {payment_id} for {final_price} TON")
         
     except Exception as e:
         logger.error(f"Payment error: {str(e)}")
