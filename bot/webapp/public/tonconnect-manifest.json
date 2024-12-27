@@ -1,9 +1,9 @@
 {
-  "url": "https://your-domain.com/webapp",
+  "url": "https://epin-bot.vercel.app",
   "name": "E-Pin Bot",
-  "iconUrl": "https://your-domain.com/webapp/icon.png",
-  "termsOfUseUrl": "https://your-domain.com/terms",
-  "privacyPolicyUrl": "https://your-domain.com/privacy",
+  "iconUrl": "https://epin-bot.vercel.app/icon.png",
+  "termsOfUseUrl": "https://epin-bot.vercel.app/terms",
+  "privacyPolicyUrl": "https://epin-bot.vercel.app/privacy",
   "manifestVersion": 2,
   "parameters": {
     "protocol": "ton-connect",
