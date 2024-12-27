@@ -1,7 +1,7 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import ContextTypes
 from keyboards import category_keyboard, main_menu_keyboard
-from config.settings import TON_WALLET_ADDRESS
+from config.settings import TON_WALLET_ADDRESS, WEBAPP_URL
 from config import MAIN_MENU
 import logging
 import random
@@ -14,11 +14,12 @@ from typing import Optional
 from utils.logger import setup_logger
 from exchange_service import get_ton_price
 from ton_service import TONService
+import json
 
 logger = setup_logger()
 
 async def handle_ton_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Handle TON cryptocurrency payment"""
+    """Handle TON cryptocurrency payment through WebApp"""
     query = update.callback_query
     await query.answer()
 
@@ -39,58 +40,42 @@ async def handle_ton_payment(update: Update, context: ContextTypes.DEFAULT_TYPE)
         price_in_ton = price_in_usd / ton_rate
         final_price = price_in_ton * Decimal(str(quantity))
         
-        # Set payment expiration (30 minutes)
-        payment_expiry = datetime.now() + timedelta(minutes=30)
-        context.user_data['payment_expiry'] = payment_expiry
-        
         # Generate unique payment ID
         payment_id = random.randint(100000, 999999)
         context.user_data['payment_id'] = payment_id
         
-        payment_message = (
-            f"💎 TON Payment Details\n\n"
+        # Prepare data for WebApp
+        webapp_data = {
+            'product': {
+                'type': product.get('type'),
+                'amount': product.get('amount'),
+                'quantity': quantity,
+                'priceInTon': str(final_price),
+                'paymentId': payment_id
+            }
+        }
+        
+        # Create WebApp button
+        keyboard = [[
+            InlineKeyboardButton(
+                "💎 Pay with TON Wallet",
+                web_app=WebAppInfo(
+                    url=f"{WEBAPP_URL}?initData={webapp_data}"
+                )
+            )
+        ]]
+        
+        await query.edit_message_text(
+            f"💫 Ready to process your order:\n\n"
             f"Product: {product.get('type').title()} {product.get('amount')}\n"
             f"Quantity: {quantity}\n"
             f"Total: {final_price:.2f} TON\n\n"
-            f"Please send exactly {final_price:.2f} TON to:\n"
-            f"`{TON_WALLET_ADDRESS}`\n\n"
-            f"📝 Important: Include this code in payment comment:\n"
-            f"`{payment_id}`"
+            f"Click below to open TON Connect and complete your purchase:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
         )
         
-        # Add expiry time to message
-        payment_message += f"\n\n⏰ Payment valid until: {payment_expiry.strftime('%H:%M:%S')}"
+        logger.info(f"TON payment initiated via WebApp: {payment_id} for {final_price} TON")
         
-        # Multiple wallet options
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    "💳 Tonkeeper",
-                    url=f"https://app.tonkeeper.com/transfer/{TON_WALLET_ADDRESS}?amount={int(final_price * Decimal('1e9'))}&text={payment_id}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    "💳 TonHub",
-                    url=f"https://tonhub.com/transfer/{TON_WALLET_ADDRESS}?amount={int(final_price * Decimal('1e9'))}&text={payment_id}"
-                )
-            ],
-            [InlineKeyboardButton("✅ I've Sent Payment", callback_data=f'check_ton_{payment_id}')],
-            [InlineKeyboardButton("❌ Cancel", callback_data='cancel_payment')]
-        ]
-        
-        await query.edit_message_text(
-            text=payment_message,
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode='Markdown'
-        )
-        
-        logger.info(f"TON payment initiated: {payment_id} for {final_price} TON")
-        
-    except ValueError as e:
-        logger.error(f"Price calculation error: {e}")
-        await query.edit_message_text("Invalid price format. Please try again.")
-        return MAIN_MENU
     except Exception as e:
         logger.error(f"Payment error: {str(e)}")
         await query.edit_message_text(
@@ -101,7 +86,70 @@ async def handle_ton_payment(update: Update, context: ContextTypes.DEFAULT_TYPE)
     
     return MAIN_MENU
 
-
+async def handle_webapp_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle WebApp payment callback"""
+    try:
+        data = json.loads(update.effective_message.web_app_data.data)
+        if data.get('type') != 'payment_success':
+            return
+            
+        payment_id = data.get('paymentId')
+        transaction_hash = data.get('transactionHash')
+        wallet_address = data.get('walletAddress')
+        
+        # Verify the transaction
+        ton_service = TONService()
+        payment_result = await ton_service.verify_payment(
+            payment_id=str(payment_id),
+            transaction_hash=transaction_hash
+        )
+        
+        if not payment_result["verified"]:
+            await update.effective_message.reply_text(
+                "❌ Payment verification failed. Please contact support."
+            )
+            return
+            
+        # Get the order
+        order = await get_order(payment_id=payment_id)
+        if not order:
+            await update.effective_message.reply_text(
+                "❌ Order not found. Please contact support."
+            )
+            return
+            
+        # Update order status and wallet address
+        await update_order_status(
+            order['id'],
+            "completed",
+            wallet_address=wallet_address
+        )
+        
+        # Get and send codes
+        codes = await get_order_codes(order['id'])
+        if not codes:
+            await update.effective_message.reply_text(
+                "❌ Error retrieving codes. Please contact support."
+            )
+            return
+            
+        # Format codes message
+        codes_message = "✅ Payment confirmed!\n\nHere are your codes:\n\n"
+        for idx, code in enumerate(codes, 1):
+            codes_message += f"{idx}. `{code['code']}`\n"
+        
+        codes_message += "\n📝 Save these codes safely!"
+        
+        await update.effective_message.reply_text(
+            codes_message,
+            parse_mode='Markdown'
+        )
+        
+    except Exception as e:
+        logger.error(f"Error processing WebApp payment: {str(e)}", exc_info=True)
+        await update.effective_message.reply_text(
+            "❌ Error processing payment. Please contact support."
+        )
 
 async def check_ton_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Check TON payment status"""

@@ -1,0 +1,12 @@
+{
+  "url": "https://your-domain.com/webapp",
+  "name": "E-Pin Bot",
+  "iconUrl": "https://your-domain.com/webapp/icon.png",
+  "termsOfUseUrl": "https://your-domain.com/terms",
+  "privacyPolicyUrl": "https://your-domain.com/privacy",
+  "manifestVersion": 2,
+  "parameters": {
+    "protocol": "ton-connect",
+    "protocolVersion": 2
+  }
+} 
