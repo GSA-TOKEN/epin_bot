@@ -41,15 +41,15 @@ function App() {
       // Convert TON amount to nanotons (1 TON = 1e9 nanotons)
       const amountInNanotons = BigInt(Math.round(parseFloat(product.priceInTon) * 1e9)).toString();
 
-      // Create transaction
+      // Create transaction with text comment instead of payload
       const transaction = {
         validUntil: Math.floor(Date.now() / 1000) + 600, // 10 minutes
         messages: [
           {
             address: import.meta.env.VITE_TON_WALLET_ADDRESS,
             amount: amountInNanotons,
-            stateInit: null,
-            payload: product.paymentId.toString()
+            // Remove stateInit and use text comment instead
+            payload: `text=${product.paymentId}`
           }
         ]
       };
