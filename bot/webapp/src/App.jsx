@@ -8,6 +8,7 @@ function App() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showManualInstructions, setShowManualInstructions] = useState(false);
 
   useEffect(() => {
     // Get product details from URL parameters
@@ -38,18 +39,16 @@ function App() {
 
     setLoading(true);
     try {
-      // Convert TON amount to nanotons (1 TON = 1e9 nanotons)
       const amountInNanotons = BigInt(Math.round(parseFloat(product.priceInTon) * 1e9)).toString();
 
-      // Create transaction
       const transaction = {
-        validUntil: Math.floor(Date.now() / 1000) + 600, // 10 minutes
+        validUntil: Math.floor(Date.now() / 1000) + 600,
         messages: [
           {
             address: import.meta.env.VITE_TON_WALLET_ADDRESS,
             amount: amountInNanotons,
             stateInit: null,
-            payload: product.paymentId.toString(), // Make sure it's a string
+            payload: product.paymentId.toString(),
           }
         ]
       };
@@ -60,12 +59,10 @@ function App() {
         paymentId: product.paymentId
       });
 
-      // Send transaction
       const result = await tonConnectUI.sendTransaction(transaction);
       
       if (result) {
         console.log('Transaction result:', result);
-        // Notify the bot about successful transaction
         WebApp.sendData(JSON.stringify({
           type: 'payment_success',
           transactionHash: result.boc,
@@ -83,38 +80,111 @@ function App() {
     }
   };
 
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    WebApp.showAlert('Copied to clipboard!');
+  };
+
   return (
     <div className="App">
       <header>
-        <h1>E-Pin Purchase</h1>
+        <h1>💎 E-Pin Purchase</h1>
       </header>
 
       <main>
         {error ? (
           <div className="error-message">{error}</div>
         ) : product ? (
-          <div className="product-details">
-            <h2>{product.type}</h2>
-            <p>Price: {product.priceInTon} TON</p>
-            <p>Quantity: {product.quantity}</p>
-          </div>
-        ) : (
-          <p>Loading product details...</p>
-        )}
+          <>
+            <div className="product-details">
+              <div className="product-header">
+                <h2>{product.type}</h2>
+                <span className="product-badge">Testnet</span>
+              </div>
+              <div className="price-tag">
+                <span className="amount">{product.priceInTon}</span>
+                <span className="currency">TON</span>
+              </div>
+              <div className="quantity">Quantity: {product.quantity}</div>
+            </div>
 
-        <div className="wallet-section">
-          <TonConnectButton />
-          
-          {wallet && product && (
-            <button 
-              onClick={handlePurchase}
-              disabled={loading}
-              className="purchase-button"
-            >
-              {loading ? 'Processing...' : 'Purchase E-Pin'}
-            </button>
-          )}
-        </div>
+            <div className="payment-section">
+              <h3>Payment Methods</h3>
+              
+              <div className="connect-wallet-section">
+                <p className="section-description">
+                  Option 1: Connect your wallet directly (recommended)
+                </p>
+                <TonConnectButton />
+                
+                {wallet && (
+                  <button 
+                    onClick={handlePurchase}
+                    disabled={loading}
+                    className="purchase-button"
+                  >
+                    {loading ? '⏳ Processing...' : '💎 Purchase E-Pin'}
+                  </button>
+                )}
+              </div>
+
+              <div className="manual-section">
+                <p className="section-description">
+                  Option 2: Manual Payment
+                  <button 
+                    onClick={() => setShowManualInstructions(!showManualInstructions)}
+                    className="toggle-button"
+                  >
+                    {showManualInstructions ? 'Hide Instructions' : 'Show Instructions'}
+                  </button>
+                </p>
+
+                {showManualInstructions && (
+                  <div className="manual-instructions">
+                    <div className="instruction-step">
+                      <h4>1. Copy Wallet Address</h4>
+                      <div className="copy-field" onClick={() => copyToClipboard(import.meta.env.VITE_TON_WALLET_ADDRESS)}>
+                        <code>{import.meta.env.VITE_TON_WALLET_ADDRESS}</code>
+                        <button className="copy-button">📋 Copy</button>
+                      </div>
+                    </div>
+
+                    <div className="instruction-step">
+                      <h4>2. Amount to Send</h4>
+                      <div className="copy-field" onClick={() => copyToClipboard(product.priceInTon)}>
+                        <code>{product.priceInTon} TON</code>
+                        <button className="copy-button">📋 Copy</button>
+                      </div>
+                    </div>
+
+                    <div className="instruction-step">
+                      <h4>3. Add Comment (Required)</h4>
+                      <div className="copy-field" onClick={() => copyToClipboard(product.paymentId)}>
+                        <code>{product.paymentId}</code>
+                        <button className="copy-button">📋 Copy</button>
+                      </div>
+                    </div>
+
+                    <div className="warning-box">
+                      ⚠️ Important:
+                      <ul>
+                        <li>Send <strong>exactly</strong> {product.priceInTon} TON</li>
+                        <li>Include the payment ID in the comment</li>
+                        <li>Double-check the wallet address</li>
+                        <li>Transaction may take 1-2 minutes to confirm</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="loading">
+            <div className="loading-spinner"></div>
+            <p>Loading product details...</p>
+          </div>
+        )}
       </main>
     </div>
   );
