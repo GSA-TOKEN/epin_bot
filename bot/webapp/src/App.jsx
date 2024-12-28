@@ -51,24 +51,30 @@ function App() {
       // Convert TON amount to nanotons (1 TON = 1e9 nanotons)
       const amountInNanotons = BigInt(Math.round(parseFloat(product.priceInTon) * 1e9)).toString();
 
+      // Convert payment ID to hex string
+      const textEncoder = new TextEncoder();
+      const payloadBytes = textEncoder.encode(product.paymentId.toString());
+      const payloadHex = Array.from(payloadBytes)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+
       // Standard TON Connect transaction format
       const transaction = {
         validUntil: Math.floor(Date.now() / 1000) + 600, // 10 minutes from now
-        from: wallet.account.address,
         messages: [
           {
             address: import.meta.env.VITE_TON_WALLET_ADDRESS,
             amount: amountInNanotons,
-            payload: Buffer.from(product.paymentId.toString()).toString('hex')
+            payload: payloadHex
           }
         ]
       };
 
       console.log('Debug - Transaction Details:', {
-        from: wallet.account.address,
         to: import.meta.env.VITE_TON_WALLET_ADDRESS,
         amount: Number(amountInNanotons) / 1e9,
-        paymentId: product.paymentId
+        paymentId: product.paymentId,
+        payloadHex
       });
 
       const result = await tonConnectUI.sendTransaction(transaction);
