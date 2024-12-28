@@ -7,6 +7,10 @@
   "manifestVersion": 2,
   "parameters": {
     "protocol": "ton-connect",
-    "protocolVersion": 2
+    "protocolVersion": 2,
+    "network": {
+      "name": "testnet",
+      "type": "ton"
+    }
   }
 } 

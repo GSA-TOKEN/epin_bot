@@ -41,15 +41,17 @@ function App() {
       // Convert TON amount to nanotons (1 TON = 1e9 nanotons)
       const amountInNanotons = BigInt(Math.round(parseFloat(product.priceInTon) * 1e9)).toString();
 
-      // Create transaction matching Tonkeeper's format exactly
+      // Create transaction for testnet
       const transaction = {
         validUntil: Math.floor(Date.now() / 1000) + 600, // 10 minutes
+        network: 'testnet', // Specify testnet
+        from: wallet.account.address,
         messages: [
           {
             address: import.meta.env.VITE_TON_WALLET_ADDRESS,
             amount: amountInNanotons,
-            // Format comment exactly as in the working URL
-            payload: product.paymentId.toString()
+            stateInit: null,
+            payload: product.paymentId.toString(),
           }
         ]
       };
