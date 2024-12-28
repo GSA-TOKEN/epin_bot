@@ -48,39 +48,63 @@ function App() {
 
     setLoading(true);
     try {
+      console.log('Starting purchase with wallet:', {
+        wallet: {
+          address: wallet.account.address,
+          chain: wallet.account.chain,
+          publicKey: wallet.account.publicKey
+        }
+      });
+
+      console.log('Product details:', product);
+
       // Convert TON amount to nanotons (1 TON = 1e9 nanotons)
       const amountInNanotons = BigInt(Math.round(parseFloat(product.priceInTon) * 1e9)).toString();
+      console.log('Amount conversion:', {
+        original: product.priceInTon,
+        inNanotons: amountInNanotons
+      });
 
-      // Convert payment ID to hex string
+      // Try different payload formats
+      const simplePayload = product.paymentId.toString();
       const textEncoder = new TextEncoder();
-      const payloadBytes = textEncoder.encode(product.paymentId.toString());
+      const payloadBytes = textEncoder.encode(simplePayload);
       const payloadHex = Array.from(payloadBytes)
         .map(b => b.toString(16).padStart(2, '0'))
         .join('');
 
-      // Standard TON Connect transaction format
+      console.log('Payload formats:', {
+        simple: simplePayload,
+        hex: payloadHex
+      });
+
+      // Try with minimal transaction format first
       const transaction = {
-        validUntil: Math.floor(Date.now() / 1000) + 600, // 10 minutes from now
         messages: [
           {
             address: import.meta.env.VITE_TON_WALLET_ADDRESS,
-            amount: amountInNanotons,
-            payload: payloadHex
+            amount: amountInNanotons
           }
         ]
       };
 
-      console.log('Debug - Transaction Details:', {
-        to: import.meta.env.VITE_TON_WALLET_ADDRESS,
-        amount: Number(amountInNanotons) / 1e9,
-        paymentId: product.paymentId,
-        payloadHex
+      console.log('Sending transaction:', transaction);
+      console.log('Environment variables:', {
+        walletAddress: import.meta.env.VITE_TON_WALLET_ADDRESS,
+        webappUrl: import.meta.env.VITE_WEBAPP_URL
+      });
+
+      // Log TonConnect UI state
+      console.log('TonConnect UI state:', {
+        connected: tonConnectUI.connected,
+        account: tonConnectUI.account,
+        wallet: tonConnectUI.wallet
       });
 
       const result = await tonConnectUI.sendTransaction(transaction);
+      console.log('Transaction result:', result);
       
       if (result) {
-        console.log('Transaction result:', result);
         WebApp.sendData(JSON.stringify({
           type: 'payment_success',
           transactionHash: result.boc,
@@ -91,8 +115,13 @@ function App() {
         WebApp.close();
       }
     } catch (e) {
-      console.error('Transaction failed:', e);
-      WebApp.showAlert('Transaction failed: ' + e.message);
+      console.error('Transaction failed with error:', e);
+      console.error('Error details:', {
+        name: e.name,
+        message: e.message,
+        stack: e.stack
+      });
+      WebApp.showAlert(`Transaction failed: ${e.message}\nPlease check console for details.`);
     } finally {
       setLoading(false);
     }
