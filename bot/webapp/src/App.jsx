@@ -41,27 +41,23 @@ function App() {
       // Convert TON amount to nanotons (1 TON = 1e9 nanotons)
       const amountInNanotons = BigInt(Math.round(parseFloat(product.priceInTon) * 1e9)).toString();
 
-      // Create transaction for testnet
+      // Create transaction
       const transaction = {
         validUntil: Math.floor(Date.now() / 1000) + 600, // 10 minutes
-        network: 'testnet', // Specify testnet
-        from: wallet.account.address,
         messages: [
           {
             address: import.meta.env.VITE_TON_WALLET_ADDRESS,
             amount: amountInNanotons,
             stateInit: null,
-            payload: product.paymentId.toString(),
+            payload: product.paymentId.toString(), // Make sure it's a string
           }
         ]
       };
 
-      console.log('Sending transaction:', {
-        ...transaction,
-        messages: transaction.messages.map(msg => ({
-          ...msg,
-          amount: Number(msg.amount) / 1e9 + ' TON'  // Log in human-readable format
-        }))
+      console.log('Debug - Transaction Details:', {
+        address: import.meta.env.VITE_TON_WALLET_ADDRESS,
+        amount: Number(amountInNanotons) / 1e9,
+        paymentId: product.paymentId
       });
 
       // Send transaction
