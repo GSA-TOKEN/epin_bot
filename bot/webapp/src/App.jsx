@@ -2,6 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { TonConnectButton, useTonWallet, useTonConnectUI } from '@tonconnect/ui-react';
 import WebApp from '@twa-dev/sdk';
 
+// Helper function to format TON amount
+const formatTonAmount = (amount) => {
+  const num = parseFloat(amount);
+  if (num < 0.0001) {
+    return num.toExponential(4);
+  }
+  return num.toFixed(Math.min(4, amount.toString().split('.')[1]?.length || 0));
+};
+
 function App() {
   const wallet = useTonWallet();
   const [tonConnectUI] = useTonConnectUI();
@@ -39,21 +48,26 @@ function App() {
 
     setLoading(true);
     try {
+      // Convert TON amount to nanotons (1 TON = 1e9 nanotons)
       const amountInNanotons = BigInt(Math.round(parseFloat(product.priceInTon) * 1e9)).toString();
 
+      // Create transaction with Tonkeeper's expected format
       const transaction = {
         validUntil: Math.floor(Date.now() / 1000) + 600,
+        network: 'testnet',
         messages: [
           {
             address: import.meta.env.VITE_TON_WALLET_ADDRESS,
             amount: amountInNanotons,
             stateInit: null,
-            payload: product.paymentId.toString(),
+            payload: '', // Empty payload for now
+            text: product.paymentId.toString() // Use text field for comment
           }
         ]
       };
 
       console.log('Debug - Transaction Details:', {
+        network: 'testnet',
         address: import.meta.env.VITE_TON_WALLET_ADDRESS,
         amount: Number(amountInNanotons) / 1e9,
         paymentId: product.paymentId
@@ -102,7 +116,7 @@ function App() {
                 <span className="product-badge">Testnet</span>
               </div>
               <div className="price-tag">
-                <span className="amount">{product.priceInTon}</span>
+                <span className="amount">{formatTonAmount(product.priceInTon)}</span>
                 <span className="currency">TON</span>
               </div>
               <div className="quantity">Quantity: {product.quantity}</div>
@@ -152,9 +166,13 @@ function App() {
                     <div className="instruction-step">
                       <h4>2. Amount to Send</h4>
                       <div className="copy-field" onClick={() => copyToClipboard(product.priceInTon)}>
-                        <code>{product.priceInTon} TON</code>
+                        <div className="amount-display">
+                          <code>{formatTonAmount(product.priceInTon)}</code>
+                          <span className="ton-label">TON</span>
+                        </div>
                         <button className="copy-button">📋 Copy</button>
                       </div>
+                      <div className="amount-note">Send exactly this amount</div>
                     </div>
 
                     <div className="instruction-step">
@@ -168,7 +186,7 @@ function App() {
                     <div className="warning-box">
                       ⚠️ Important:
                       <ul>
-                        <li>Send <strong>exactly</strong> {product.priceInTon} TON</li>
+                        <li>Send <strong>exactly</strong> {formatTonAmount(product.priceInTon)} TON</li>
                         <li>Include the payment ID in the comment</li>
                         <li>Double-check the wallet address</li>
                         <li>Transaction may take 1-2 minutes to confirm</li>
