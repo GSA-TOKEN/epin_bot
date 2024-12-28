@@ -51,24 +51,22 @@ function App() {
       // Convert TON amount to nanotons (1 TON = 1e9 nanotons)
       const amountInNanotons = BigInt(Math.round(parseFloat(product.priceInTon) * 1e9)).toString();
 
-      // Create transaction with Tonkeeper's expected format
+      // Standard TON Connect transaction format
       const transaction = {
-        validUntil: Math.floor(Date.now() / 1000) + 600,
-        network: 'testnet',
+        validUntil: Math.floor(Date.now() / 1000) + 600, // 10 minutes from now
+        from: wallet.account.address,
         messages: [
           {
             address: import.meta.env.VITE_TON_WALLET_ADDRESS,
             amount: amountInNanotons,
-            stateInit: null,
-            payload: '', // Empty payload for now
-            text: product.paymentId.toString() // Use text field for comment
+            payload: Buffer.from(product.paymentId.toString()).toString('hex')
           }
         ]
       };
 
       console.log('Debug - Transaction Details:', {
-        network: 'testnet',
-        address: import.meta.env.VITE_TON_WALLET_ADDRESS,
+        from: wallet.account.address,
+        to: import.meta.env.VITE_TON_WALLET_ADDRESS,
         amount: Number(amountInNanotons) / 1e9,
         paymentId: product.paymentId
       });
