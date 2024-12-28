@@ -58,47 +58,29 @@ function App() {
 
       console.log('Product details:', product);
 
-      // Convert TON amount to nanotons (1 TON = 1e9 nanotons)
-      const amountInNanotons = BigInt(Math.round(parseFloat(product.priceInTon) * 1e9)).toString();
+      // Convert TON amount to nanotons (1 TON = 1e9 nanotons) - EXACTLY as in manual transfer
+      const amountInNanotons = Math.round(parseFloat(product.priceInTon) * 1e9).toString();
       console.log('Amount conversion:', {
         original: product.priceInTon,
         inNanotons: amountInNanotons
       });
 
-      // Try different payload formats
-      const simplePayload = product.paymentId.toString();
-      const textEncoder = new TextEncoder();
-      const payloadBytes = textEncoder.encode(simplePayload);
-      const payloadHex = Array.from(payloadBytes)
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-
-      console.log('Payload formats:', {
-        simple: simplePayload,
-        hex: payloadHex
-      });
-
-      // Try with minimal transaction format first
+      // Match the exact format used in successful manual transfers
       const transaction = {
+        validUntil: Math.floor(Date.now() / 1000) + 600,
         messages: [
           {
             address: import.meta.env.VITE_TON_WALLET_ADDRESS,
-            amount: amountInNanotons
+            amount: amountInNanotons,
+            text: product.paymentId.toString()  // Use text field exactly as in manual transfer
           }
         ]
       };
 
-      console.log('Sending transaction:', transaction);
-      console.log('Environment variables:', {
-        walletAddress: import.meta.env.VITE_TON_WALLET_ADDRESS,
-        webappUrl: import.meta.env.VITE_WEBAPP_URL
-      });
-
-      // Log TonConnect UI state
-      console.log('TonConnect UI state:', {
-        connected: tonConnectUI.connected,
-        account: tonConnectUI.account,
-        wallet: tonConnectUI.wallet
+      console.log('Sending transaction:', {
+        to: import.meta.env.VITE_TON_WALLET_ADDRESS,
+        amount: amountInNanotons,
+        text: product.paymentId.toString()
       });
 
       const result = await tonConnectUI.sendTransaction(transaction);
